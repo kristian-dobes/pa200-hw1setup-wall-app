@@ -17,10 +17,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Configure PostgreSQL connection
 const pool = new Pool({
   // You should use environment variables for production
-  user: process.env.DB_USER || 'postgres',
+  user: process.env.DB_USER || 'walluser',
   host: process.env.DB_HOST || '10.0.0.4',
   database: process.env.DB_NAME || 'wallapp',
-  password: process.env.DB_PASSWORD || 'postgres',
+  password: process.env.DB_PASSWORD || '123456',
   port: process.env.DB_PORT || 5432,
 });
 
