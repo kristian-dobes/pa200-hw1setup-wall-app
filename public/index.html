@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Wall App - PA200 HW1 - Kristian Dobes 518660</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        #post-form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        #post-content {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #posts-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        .post {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .post:last-child {
+            border-bottom: none;
+        }
+        .post-date {
+            color: #888;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wall App</h1>
+    
+    <div id="post-form">
+        <h2>Add a Post</h2>
+        <textarea id="post-content" placeholder="What's on your mind?" rows="4"></textarea>
+        <button id="submit-post">Post</button>
+        <div id="error-message" class="error"></div>
+    </div>
+    
+    <div id="posts-container">
+        <h2>Recent Posts</h2>
+        <div id="posts-list"></div>
+    </div>
+
+    <script>
+        // API endpoints
+        const API_URL = '/api/posts';
+
+        // DOM elements
+        const postContent = document.getElementById('post-content');
+        const submitButton = document.getElementById('submit-post');
+        const postsList = document.getElementById('posts-list');
+        const errorMessage = document.getElementById('error-message');
+
+        // Load all posts when page loads
+        window.addEventListener('DOMContentLoaded', loadPosts);
+
+        // Add event listener to submit button
+        submitButton.addEventListener('click', createPost);
+
+        // Function to load all posts
+        async function loadPosts() {
+            try {
+                const response = await fetch(API_URL);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch posts');
+                }
+                
+                const posts = await response.json();
+                displayPosts(posts);
+            } catch (error) {
+                errorMessage.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Function to create a new post
+        async function createPost() {
+            const content = postContent.value.trim();
+            
+            if (!content) {
+                errorMessage.textContent = 'Post cannot be empty';
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ content })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to create post');
+                }
+                
+                // Clear the textarea and error message
+                postContent.value = '';
+                errorMessage.textContent = '';
+                
+                // Reload posts
+                loadPosts();
+            } catch (error) {
+                errorMessage.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        // Function to display posts
+        function displayPosts(posts) {
+            postsList.innerHTML = '';
+            
+            if (posts.length === 0) {
+                postsList.innerHTML = '<p>No posts yet. Be the first to post!</p>';
+                return;
+            }
+            
+            // Sort posts by timestamp (newest first)
+            posts.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            posts.forEach(post => {
+                const postElement = document.createElement('div');
+                postElement.className = 'post';
+                
+                const postDate = new Date(post.timestamp).toLocaleString();
+                
+                postElement.innerHTML = `
+                    <div>${post.content}</div>
+                    <div class="post-date">${postDate}</div>
+                `;
+                
+                postsList.appendChild(postElement);
+            });
+        }
+    </script>
+</body>
+</html>
